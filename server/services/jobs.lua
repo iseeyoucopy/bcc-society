@@ -51,6 +51,13 @@ RegisterServerEvent("bcc-society:ToggleDuty", function()
     local charJobGrade = char.jobGrade
     local toggled = false
 
+    -- Check if the player is employed in `bcc_society_employees`
+    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?", { char.charIdentifier })
+    if not employmentData or #employmentData == 0 then
+        Core.NotifyRightTip(_source, "You are not employed in a society and cannot toggle duty status.", 4000)
+        return
+    end
+
     -- Determine if the character is currently on or off duty based on job prefix
     if string.sub(charJob, 1, 3) == "off" then
         -- Switch to on-duty (remove "off" prefix)
@@ -74,7 +81,7 @@ RegisterServerEvent("bcc-society:ToggleDuty", function()
     end
 
     if not toggled then
-        Core.NotifyRightTip(_source, "no toggle occurred", 4000) -- Optional message if no toggle occurred
+        Core.NotifyRightTip(_source, "No toggle occurred", 4000) -- Optional message if no toggle occurred
     end
 end)
 
@@ -84,21 +91,26 @@ AddEventHandler('playerDropped', function(reason)
     if not user then 
         return
     end
-    -- Make sure user exists and character is active
-    if user then
+
+    -- Ensure user exists and character is active
         local char = user.getUsedCharacter
-        if char then
+    if not char then
+        return
+    end
+
             local charJob = char.job
 
-            -- Check if the player is on duty (doesn't have "off" prefix)
+    -- Check if the player is employed in `bcc_society_employees`
+    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?", { char.charIdentifier })
+    if employmentData and #employmentData > 0 then
+        -- Check if the player is currently on duty (doesn't have "off" prefix)
             if string.sub(charJob, 1, 3) ~= "off" then
                 -- Set the player off-duty in the database
                 local offDutyJob = "off" .. charJob
                 MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?", { offDutyJob, char.charIdentifier })
                 
-                -- Optionally, you can log this action or notify admins if needed
+            -- Log the action or notify admins if necessary
                 print("Player " .. playerId .. " set to off-duty: " .. offDutyJob)
             end
         end
-    end
 end)

@@ -248,6 +248,9 @@ BccUtils.RPC:Register("bcc-society:GetPaymentAmount", function(params, cb, recSo
     end
 end)
 
+-- Define a cooldown table to store the last collection time for each player
+local playerPaymentCooldowns = {}
+
 RegisterServerEvent("bcc-society:CollectPayment", function()
     local _source = source
     local user = Core.getUser(_source)
@@ -255,31 +258,41 @@ RegisterServerEvent("bcc-society:CollectPayment", function()
     local char = user.getUsedCharacter
     local charFullName = char.firstname .. " " .. char.lastname
 
-    -- Fetch rank and society ledger data
-    local employeeData = MySQL.query.await("SELECT e.employee_payment, s.ledger, s.webhook_link, s.business_id FROM bcc_society_employees e JOIN bcc_society s ON e.business_id = s.business_id WHERE e.employee_id = ?", { char.charIdentifier })
+    -- Cooldown check: allow payment collection only if the cooldown period has passed
+    local currentTime = os.time()
+    local cooldownTime = 120 -- Cooldown time in seconds (e.g., 2 minutes)
+    if playerPaymentCooldowns[_source] and currentTime - playerPaymentCooldowns[_source] < cooldownTime then
+        Core.NotifyRightTip(_source, _U('cooldownActive'), 4000)
+        return
+    end
 
+    local employeeData = MySQL.query.await("SELECT e.employee_payment, s.ledger, s.webhook_link, s.business_id FROM bcc_society_employees e JOIN bcc_society s ON e.business_id = s.business_id WHERE e.employee_id = ?", { char.charIdentifier })
     if employeeData and #employeeData > 0 then
         local payAmount = tonumber(employeeData[1].employee_payment)
         local ledgerAmount = tonumber(employeeData[1].ledger)
         local societyId = employeeData[1].business_id
-
         if payAmount and payAmount > 0 then
             if ledgerAmount >= payAmount then
                 -- Complete payment and update ledger
                 char.addCurrency(0, payAmount)
-                MySQL.query.await("UPDATE bcc_society SET ledger = ledger - ? WHERE business_id = ?", { payAmount, societyId })
+                local ledgerUpdate = MySQL.query.await("UPDATE bcc_society SET ledger = ledger - ? WHERE business_id = ?", { payAmount, societyId })
+                -- Confirm the updated ledger amount
+                local updatedLedgerData = MySQL.query.await("SELECT ledger FROM bcc_society WHERE business_id = ?", { societyId })
                 
-                -- Reset the employee_payment to zero after payment collection
                 MySQL.query.await("UPDATE bcc_society_employees SET employee_payment = 0 WHERE employee_id = ? AND business_id = ?", { char.charIdentifier, societyId })
+
                 Core.NotifyRightTip(_source, _U('youHaveCollected') .. tostring(payAmount), 4000)
                 
                 -- Discord notification
                 local paymentMessage = "**Payment Collected**\n" ..
                                        "**Employee:** " .. charFullName .. "\n" ..
                                        "**Amount Paid:** $" .. tostring(payAmount) .. "\n" ..
-                                       "**Remaining Ledger:** $" .. tostring(ledgerAmount - payAmount)
+                                       "**Remaining Ledger:** $" .. tostring(updatedLedgerData[1].ledger)
                 
                 BccUtils.Discord.sendMessage(employeeData[1].webhook_link, Config.WebhookTitle, Config.WebhookAvatar, "Payment Collected", paymentMessage)
+
+                -- Set the last collection time for the player to the current time
+                playerPaymentCooldowns[_source] = currentTime
             else
                 Core.NotifyRightTip(_source, _U('insufficientFunds'), 4000)
             end
@@ -297,20 +310,13 @@ RegisterServerEvent("bcc-society:PayEmployee", function(payAmount, societyId)
     if not user then return end
     local char = user.getUsedCharacter
 
-    local employeeData = MySQL.query.await("SELECT e.employee_payment, s.ledger, s.webhook_link FROM bcc_society_employees e JOIN bcc_society s ON e.business_id = s.business_id WHERE e.employee_id = ? AND e.business_id = ?", { char.charIdentifier, societyId })
-
+    -- Fetch the current employee payment amount directly
+    local employeeData = MySQL.query.await("SELECT employee_payment FROM bcc_society_employees WHERE employee_id = ? AND business_id = ?", { char.charIdentifier, societyId })
     if employeeData and #employeeData > 0 then
-        local retrievedPayAmount = tonumber(employeeData[1].employee_payment)
-        local ledgerAmount = tonumber(employeeData[1].ledger)
+        local currentPayAmount = tonumber(employeeData[1].employee_payment)
+        local newPayAmount = currentPayAmount + payAmount
 
-        if ledgerAmount >= retrievedPayAmount and ledgerAmount > 0 then
-            MySQL.update.await("UPDATE bcc_society SET ledger = ledger - ? WHERE business_id = ?", { retrievedPayAmount, societyId })            
-            local newPayAmount = retrievedPayAmount + payAmount
             MySQL.update.await("UPDATE bcc_society_employees SET employee_payment = ? WHERE employee_id = ? AND business_id = ?", { newPayAmount, char.charIdentifier, societyId })
-            Core.NotifyRightTip(_source, _U('paymentProcessed') .. retrievedPayAmount, 4000)
-        else
-            Core.NotifyRightTip(_source, _U('insufficientFunds'), 4000)
-        end
     else
         Core.NotifyRightTip(_source, _U('youNeedToBeOnDuty'), 4000)
     end

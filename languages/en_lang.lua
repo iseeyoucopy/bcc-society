@@ -171,5 +171,6 @@ Locales["en_lang"] = {
     insufficientFunds = "Insufficient funds in the society ledger.",
     youCannotCollect = "You cannot collect a payment of $0.",
     youNeedToBeOnDuty = "You need to be on duty in order to collect your payment.",
-    paymentProcessed = "Payment processed successfully for amount $"
+    paymentProcessed = "Payment processed successfully for amount $",
+    cooldownActive = "Cooldown active please wait"
 }
