@@ -171,5 +171,6 @@ Locales["ro_lang"] = {
     insufficientFunds = "Nu sunt suficiente fonduri in registrul societatii.",
     youCannotCollect = "Nu poti colecta o plata cu valoarea de $0.",
     youNeedToBeOnDuty = "Trebuie sa fii on duty ca sa iti iei plata.",
-    paymentProcessed = "Plata a fost procesata in valoare de $"
+    paymentProcessed = "Plata a fost procesata in valoare de $",
+    cooldownActive = "Ti-ai luat salariul deja, te rog asteapta cateva minute"
 }
