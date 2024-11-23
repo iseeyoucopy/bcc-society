@@ -1,6 +1,7 @@
 BccUtils.RPC:Register("bcc-society:GetAllSocietyJobsPlayerEmployedAt", function(params, cb, recSource)
-    local char = Core.getUser(recSource)
-    local jobs = SocietyAPI.MiscAPI:GetAllSocietyJobsFromSocietiesPlayerEmployedAtOrOwns(char:GetCharId())
+    local user = Core.getUser(recSource)
+    local char = user.getUsedCharacter
+    local jobs = SocietyAPI.MiscAPI:GetAllSocietyJobsFromSocietiesPlayerEmployedAtOrOwns(char.charIdentifier)
     if jobs then
         return cb(jobs)
     else
@@ -10,10 +11,11 @@ end)
 
 RegisterServerEvent("bcc-society:UpdateJob", function(jobName, societyId)
     local _source = source
-    local char = Core.getUser(_source)
+    local user = Core.getUser(_source)
+    local char = user.getUsedCharacter
     local society = SocietyAPI:GetSociety(societyId)
     if society then
-        local employeeRank = society:GetEmployeeRank(char:GetCharId())
+        local employeeRank = society:GetEmployeeRank(char.charIdentifier)
         if employeeRank then
             local jobGrade
             if employeeRank == 'none' then
