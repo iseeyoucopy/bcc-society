@@ -4,21 +4,16 @@ Config = {
     createSocietyCommandName = "createSociety", -- Command to create a society
     useWebhooks = false,
     WebhookTitle = 'BCC-Society',
-    WebhookAvatar = 'https://i.ibb.co/N3GNfJW/Artboard-1.png',
+    WebhookAvatar = '',
     adminLogsWebhook = "", -- Webhook for admin logs
     -- TO BE ABLE TO RUN CREATE SOCIEITY YOUR USER GROUP MUST BE ADMIN IN VORP AND RSG
 
     employeeWorksAtMultiple = true, -- Allow employees to work at multiple societies (Can only own one regardless of this setting)
     openJobManagementMenuCommandName = "jobManagement", -- Command to open the job management menu (This is how you switch between jobs (NOTE this only applies if you enable employeeWorksAtMultiple))
-    onDutyJobs = { -- These are jobs that can toggle being on and off duty (Set false to disable this)
-        "writer",
-        "doctor",
-        "primar",
-        "conductor"
-    },
     -- Set your admin group here
     adminGroup = 'admin',
-    toggleDutyCommandName = "onDuty", -- Command to toggle duty
+    toggleOnDutyCommandName = "onDuty", -- Command to toggle duty
+    toggleOffDutyCommandName = "offDuty", -- Command to toggle duty
     allowBlips = true, -- Allow blips to be shown for societies
     toggleBlipCooldown = 10, -- Cooldown for toggling blips in seconds
     manageSocietyPromptKey = 0x4CC0E2FE, -- Key to open the society management prompt

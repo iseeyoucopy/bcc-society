@@ -196,17 +196,24 @@ function SocietyAPI.MiscAPI:CheckIfPlayerHasJobAndIsOnDuty(jobName, playerSource
         return false
     end
 
+    -- Get the player's current job and job grade
     local playerJob = Character.job
     local jobGrade = Character.jobGrade
 
-    if #Config.onDutyJobs > 0 then
-        for _, onDutyJob in pairs(Config.onDutyJobs) do
-            if playerJob == jobName then
-                return true
-            elseif playerJob == ("off" .. jobName) then
-                return false
-            end
-        end
+    -- Check if the player is employed in the society
+    local employmentData = MySQL.query.await("SELECT employee_rank FROM bcc_society_employees WHERE employee_id = ?", { Character.charIdentifier })
+    
+    if not employmentData or #employmentData == 0 then
+        return false
+    end
+
+    -- Check if the current job matches the requested job and is not off duty
+    if playerJob == jobName then
+        -- They are on duty with the correct job
+        return true
+    elseif playerJob == ("off" .. jobName) then
+        -- They have the correct job but are off duty
+        return false
     end
 
     return false

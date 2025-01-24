@@ -194,31 +194,39 @@ end)
 
 BccUtils.RPC:Register("bcc-society:GetEmployeeData", function(params, cb, recSource)
     local user = Core.getUser(recSource)
-    
-    if not user then return cb(false) end
-    
+
+    if not user then
+        return cb(false)
+    end
+
     local char = user.getUsedCharacter
-    if not char then return cb(false) end
+    if not char then
+        return cb(false)
+    end
 
     local charId = char.charIdentifier
+
     local society = SocietyAPI:GetSociety(params.socId)
 
-    if society then
-        local employeeData = society:GetEmployeeData(charId)
+    if not society then
+        return cb(false)
+    end
 
-        if params.recType == "employeeData" then
-            cb(employeeData)
-        elseif params.recType == "rankData" then
-            if employeeData then
-                local employeeRankName = society:GetEmployeeRank(charId)
-                if employeeRankName then
-                    cb(society:GetRankInfo(employeeRankName))
-                else
-                    cb(false)
-                end
+    local employeeData = society:GetEmployeeData(charId)
+
+    if params.recType == "employeeData" then
+        cb(employeeData)
+    elseif params.recType == "rankData" then
+        if employeeData then
+            local employeeRankName = society:GetEmployeeRank(charId)
+            if employeeRankName then
+                local rankData = society:GetRankInfo(employeeRankName)
+                cb(rankData)
             else
                 cb(false)
             end
+        else
+            cb(false)
         end
     else
         cb(false)
