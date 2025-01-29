@@ -5,13 +5,14 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
     local char = user.getUsedCharacter
     local fullName = char.firstname .. " " .. char.lastname
     local webhookLink = MySQL.query.await("SELECT * FROM bcc_society WHERE business_id = ?", { businessId })
+
     if not tonumber(rankJobGrade) then -- Default value if it's not a number
         rankJobGrade = 0
     end
 
     local rankInfo = "**Rank Information**\n" ..
         "- **Name**: " .. rankName .. "\n" ..
-        "- **Label**: " .. rankLabel .. "\n" ..
+        "- **Label**: " .. "label" .. "\n" ..
         "- **Grade**: " .. rankJobGrade .. "\n" ..
         "- **Business ID**: " .. businessId
 
@@ -74,24 +75,41 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
                 { rankLabel, rankPay, payIncrement, toggleBlip, withdraw, deposit, editRanks, manageEmployees, openInventory, editWebhook, canManageStore, rankJobGrade, rankCanBillPlayers, businessId, rankName })
             Core.NotifyRightTip(_source, _U("rankUpdated"), 4000)
         end
+        
     elseif type == "delete" then
+        -- Validate `businessId` and `rankName`
+        if not businessId or not rankName then
+            Core.NotifyRightTip(_source, _U("invalidDeleteParams"), 4000)
+            return
+        end
+    
+        -- Fetch the rank to confirm its existence
         local retval = MySQL.query.await("SELECT * FROM bcc_society_ranks WHERE business_id = ? AND rank_name = ?", { businessId, rankName })
         if #retval > 0 then
+            -- Delete the rank
             MySQL.query.await("DELETE FROM bcc_society_ranks WHERE business_id = ? AND rank_name = ?", { businessId, rankName })
             Core.NotifyRightTip(_source, _U("rankDeleted"), 4000)
-            
-            -- Send a Discord notification
-            BccUtils.Discord.sendMessage(
-                webhookLink[1].webhook_link,
-                Config.WebhookTitle,
-                Config.WebhookAvatar,
-                _U("rankDeleted"),
-                "**" .. _U("rankDeletedBy") .. "** " .. fullName .. "\n" ..
-                "- **" .. _U("rankName") .. ":** " .. rankName .. "\n" ..
-                "- **Business ID**: " .. businessId
-            )
+    
+            -- Check if webhook link exists
+            if webhookLink and webhookLink[1] and webhookLink[1].webhook_link then
+                -- Send a Discord notification
+                BccUtils.Discord.sendMessage(
+                    webhookLink[1].webhook_link,
+                    Config.WebhookTitle,
+                    Config.WebhookAvatar,
+                    _U("rankDeleted"),
+                    "**" .. _U("rankDeletedBy") .. "** " .. fullName .. "\n" ..
+                    "- **" .. _U("rankName") .. ":** " .. rankName .. "\n" ..
+                    "- **Business ID**: " .. businessId
+                )
+            else
+                print("Warning: No webhook link available for business ID " .. businessId)
+            end
+        else
+            Core.NotifyRightTip(_source, _U("rankNotFound"), 4000)
         end
-    end    
+    end
+    
 end)
 
 BccUtils.RPC:Register("bcc-society:GetAllRanks", function(params, cb, recSource)

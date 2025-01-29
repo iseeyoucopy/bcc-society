@@ -1,6 +1,9 @@
 BccUtils.RPC:Register("bcc-society:GetAllSocietyJobsPlayerEmployedAt", function(params, cb, recSource)
-    local user = Core.getUser(recSource)
-    local char = user.getUsedCharacter
+    local user = Core.getUser(recSource) --[[@as User]]  
+    if not user then return end -- is player in session?
+    local char = user.getUsedCharacter --[[@as Character]]
+    --local user = Core.getUser(recSource)
+    --local char = user.getUsedCharacter
     local jobs = SocietyAPI.MiscAPI:GetAllSocietyJobsFromSocietiesPlayerEmployedAtOrOwns(char.charIdentifier)
     if jobs then
         return cb(jobs)
@@ -30,89 +33,118 @@ RegisterServerEvent("bcc-society:UpdateJob", function(jobName, societyId)
                 if not grade then
                     grade = 0
                 end
-                char.setJob(jobName, grade)
+                char.setJob(jobName)
+                char.setJobGrade(grade)
                 Core.NotifyRightTip(_source, _U("jobChanged"), 4000)
             end
         end
     end
 end)
 
-RegisterServerEvent("bcc-society:ToggleDuty", function()
+-- Toggle ON Duty Event
+RegisterServerEvent("bcc-society:ToggleOnDuty", function()
     local _source = source
-    local user = Core.getUser(_source)
-    if not user then 
-        return
-    end
+    local user = Core.getUser(source)
+    if not user then return end
+    local character = user.getUsedCharacter
 
-    local char = user.getUsedCharacter
-    if not char then
-        return
-    end
-
-    local charJob = char.job
-    local charJobGrade = char.jobGrade
-    local toggled = false
+    local charJob = character.job
+    local charJobGrade = character.jobGrade
 
     -- Check if the player is employed in `bcc_society_employees`
-    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?", { char.charIdentifier })
+    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?",
+        { character.charIdentifier })
     if not employmentData or #employmentData == 0 then
         Core.NotifyRightTip(_source, "You are not employed in a society and cannot toggle duty status.", 4000)
         return
     end
 
-    -- Determine if the character is currently on or off duty based on job prefix
-    if string.sub(charJob, 1, 3) == "off" then
-        -- Switch to on-duty (remove "off" prefix)
-        local onDutyJob = string.sub(charJob, 4)
-        char.setJob(onDutyJob, charJobGrade)
-        Core.NotifyRightTip(_source, _U("onDuty"), 4000)
-
-        -- Update employee rank in the database to reflect on-duty
-        MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?", { onDutyJob, char.charIdentifier })
-        toggled = true
-
-    else
-        -- Switch to off-duty (add "off" prefix)
-        local offDutyJob = "off" .. charJob
-        char.setJob(offDutyJob, charJobGrade)
-        Core.NotifyRightTip(_source, _U("offDuty"), 4000)
-
-        -- Update employee rank in the database to reflect off-duty
-        MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?", { offDutyJob, char.charIdentifier })
-        toggled = true
+    -- Check if player is actually off duty
+    if string.sub(charJob, 1, 3) ~= "off" then
+        Core.NotifyRightTip(_source, "You are already on duty!", 4000)
+        return
     end
 
-    if not toggled then
-        Core.NotifyRightTip(_source, "No toggle occurred", 4000) -- Optional message if no toggle occurred
+    -- Switch to on-duty (remove "off" prefix)
+    local onDutyJob = string.sub(charJob, 4)
+ 
+    -- Alternative method if above doesn't work
+    if character.job == charJob then  -- If job hasn't changed, try alternative method
+        character.setJob(onDutyJob)     -- Method 2 with colon
     end
+
+    Core.NotifyRightTip(_source, _U("onDuty"), 4000)
+
+    -- Update employee rank in the database
+    MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?",
+        { onDutyJob, character.charIdentifier })
+
 end)
 
-AddEventHandler('playerDropped', function(reason)
-    local playerId = source
-    local user = Core.getUser(playerId)
-    if not user then 
-        return
-    end
+RegisterServerEvent("bcc-society:ToggleOffDuty", function()
+    local _source = source
+    local user = Core.getUser(source)
+    if not user then return end
+    local character = user.getUsedCharacter
 
-    -- Ensure user exists and character is active
-        local char = user.getUsedCharacter
-    if not char then
-        return
-    end
-
-            local charJob = char.job
-
+    -- Get the job name - adjust this based on the actual structure
+    local charJob = character.job -- or character.job[1] depending on the structure
+    
     -- Check if the player is employed in `bcc_society_employees`
-    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?", { char.charIdentifier })
-    if employmentData and #employmentData > 0 then
-        -- Check if the player is currently on duty (doesn't have "off" prefix)
-            if string.sub(charJob, 1, 3) ~= "off" then
-                -- Set the player off-duty in the database
-                local offDutyJob = "off" .. charJob
-                MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?", { offDutyJob, char.charIdentifier })
-                
-            -- Log the action or notify admins if necessary
-                print("Player " .. playerId .. " set to off-duty: " .. offDutyJob)
-            end
+    local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?",
+        { character.charIdentifier })
+    if not employmentData or #employmentData == 0 then
+        Core.NotifyRightTip(_source, "You are not employed in a society and cannot toggle duty status.", 4000)
+        return
+    end
+
+    -- Check if player is actually on duty
+    if string.sub(charJob, 1, 3) == "off" then
+        Core.NotifyRightTip(_source, "You are already off duty!", 4000)
+        return
+    end
+
+    -- Switch to off-duty (add "off" prefix)
+    local offDutyJob = "off" .. charJob
+    
+    -- Try to set the new job
+    character.setJob(offDutyJob)
+    
+    Core.NotifyRightTip(_source, _U("offDuty"), 4000)
+
+    -- Update employee rank in the database
+    MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?",
+        { offDutyJob, character.charIdentifier })
+end)
+
+-- Server Restart/Stop Handler
+AddEventHandler('onResourceStop', function(resourceName)
+    if (GetCurrentResourceName() ~= resourceName) then
+        return
+    end
+
+    local activeEmployees = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_rank NOT LIKE 'off%'")
+
+    if not activeEmployees then
+        return
+    end
+
+    -- Set all active employees to off-duty
+    for _, employee in ipairs(activeEmployees) do
+        local currentJob = employee.employee_rank
+        local offDutyJob = "off" .. currentJob
+        local _source = source
+        local user = Core.getUser(employee.employee_id)
+        if not user then return end
+        local char = user.getUsedCharacter
+        if char then
+            char.setJob(offDutyJob)
+        else
+            print("Character not found for employee ID: " .. employee.employee_id)
         end
+
+        -- Update database
+        MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?",
+            { offDutyJob, employee.employee_id })
+    end
 end)

@@ -21,6 +21,10 @@ RegisterCommand(Config.openJobManagementMenuCommandName, function()
     })
 end)
 
-RegisterCommand(Config.toggleDutyCommandName, function()
-    TriggerServerEvent('bcc-society:ToggleDuty')
+RegisterCommand(Config.toggleOnDutyCommandName, function()
+    TriggerServerEvent('bcc-society:ToggleOnDuty')
+end)
+
+RegisterCommand(Config.toggleOffDutyCommandName, function()
+    TriggerServerEvent('bcc-society:ToggleOffDuty')
 end)
