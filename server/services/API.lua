@@ -114,6 +114,14 @@ function SocietyAPI:GetSociety(societyId)
     end
 end
 
+function SocietyAPI:GetSocietyByJob(jobName)
+    local societyData = MySQL.query.await("SELECT * FROM bcc_society WHERE society_job = ?", { jobName })
+    if #societyData > 0 then
+        return self:GetSociety(societyData[1].business_id)
+    end
+    return false
+end
+
 SocietyAPI.MiscAPI = {}
 function SocietyAPI.MiscAPI:GetAllSocietiesCharOwns(charIdentifier)
     local retval = MySQL.query.await("SELECT * FROM bcc_society WHERE owner_id = ?", { charIdentifier })
