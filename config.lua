@@ -6,7 +6,7 @@ Config = {
     WebhookTitle = 'BCC-Society',
     WebhookAvatar = '',
     adminLogsWebhook = "", -- Webhook for admin logs
-    -- TO BE ABLE TO RUN CREATE SOCIEITY YOUR USER GROUP MUST BE ADMIN IN VORP AND RSG
+    -- TO BE ABLE TO RUN CREATE SOCIEITY YOUR USER GROUP MUST BE ADMIN IN VORP
 
     employeeWorksAtMultiple = true, -- Allow employees to work at multiple societies (Can only own one regardless of this setting)
     openJobManagementMenuCommandName = "jobManagement", -- Command to open the job management menu (This is how you switch between jobs (NOTE this only applies if you enable employeeWorksAtMultiple))
@@ -23,6 +23,7 @@ Config = {
     openMenuRadius = 2, -- Radius to open the society management menu (Can not be larger than 49)
     billCommandName = "bill", -- Command to open the bill menu
     adminMenuCommandName = "manageSocieties", -- Command to open the admin menu
+    bill_receiptitem = "bcc_society_receipt",
     blips = { --Blips you can choose when making societies (You can add as many as you want just follow the layout)
         {
             blipName = "Gun Store",

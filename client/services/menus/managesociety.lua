@@ -2,6 +2,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
     BCCSocietyMenu:Close()
 
     local employeeData = nil
+    local isOwner = IsSocietyOwner(societyData.business_id)
     if not isOwner then
         employeeData = BccUtils.RPC:CallAsync("bcc-society:GetEmployeeData", {socId = societyData.business_id, recType = "rankData"})
     end
@@ -585,6 +586,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
             if isOwner or employeeData ~= nil and employeeData.rank_can_deposit == "true" or employeeData ~= nil and employeeData.rank_can_withdraw == "true" then
                 ledgerPage:RegisterElement("button", {
                     label = _U("confirm"),
+                    slot = 'footer',
                     style = {}
                 }, function()
                     if depositAmount ~= '' then
@@ -846,6 +848,11 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                 end
             end)
 
+            employeePage:RegisterElement("line", {
+                slot = 'footer',
+                style = {}
+            })
+
             employeePage:RegisterElement("button", {
                 label = _U("back"),
                 slot = 'footer',
@@ -853,6 +860,11 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
             }, function()
                 manageSocietyPage:RouteTo()
             end)
+
+            employeePage:RegisterElement("bottomline", {
+                slot = 'footer',
+                style = {}
+            })
 
             employeePage:RouteTo()
         end)
@@ -876,8 +888,13 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
             }, function(data)
                 webhookLink = data.value
             end)
+            editWebhookPage:RegisterElement("line", {
+                slot = 'footer',
+                style = {}
+            })
             editWebhookPage:RegisterElement("button", {
                 label = _U("confirm"),
+                slot = 'footer',
                 style = {}
             }, function()
                 if webhookLink ~= "" then
@@ -897,6 +914,11 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
             }, function()
                 manageSocietyPage:RouteTo()
             end)
+
+            editWebhookPage:RegisterElement("bottomline", {
+                slot = 'footer',
+                style = {}
+            })
 
             editWebhookPage:RouteTo()
         end)

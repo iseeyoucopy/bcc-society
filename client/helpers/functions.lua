@@ -10,7 +10,19 @@ BCCSocietyMenu = FeatherMenu:RegisterMenu('BCC-Society:Menu', {
     ['1080width'] = '500px',
     ['2kwidth'] = '600px',
     ['4kwidth'] = '800px',
-    style = {},
+    style = {
+        --['background-image'] = 'url("nui://bcc-society/background.png")',
+        --['background-image'] = 'url("https://i.imgur.com/7c2xBaG.png")',
+        --[[['background-size'] = 'cover',
+        ['background-repeat'] = 'no-repeat',
+            ['background-position'] = 'center',
+            ['padding'] = '50px',
+            ['font-family'] = 'Courier New, monospace',
+            ['color'] =  '#3e2e1e',
+            ['width'] = '100%',
+            ['margin'] =  '0 auto',
+            ['box-shadow'] = '0 0 10px rgba(0,0,0,0.4)',]]--
+    },
     contentslot = {
         style = {
             ['height'] = '350px',
@@ -28,6 +40,19 @@ BCCSocietyMenu = FeatherMenu:RegisterMenu('BCC-Society:Menu', {
     end
 })
 
+-- Helper function for debugging in DevMode
+if Config.devMode then
+    function devPrint(...)
+        local args = {...}
+        local msg = "^1[DEV MODE] ^4"
+        for _, v in ipairs(args) do
+            msg = msg .. tostring(v) .. " "
+        end
+        print(msg)
+    end
+else
+    function devPrint(...) end
+end
 
 -- Function to create and display the player list menu
 function GetPlayerListMenuPage(exclusionList, playerChosenCbFunct, backButtonCbFunct)
@@ -72,6 +97,10 @@ function GetPlayerListMenuPage(exclusionList, playerChosenCbFunct, backButtonCbF
             end)
         end
     end
+    playerListMenupage:RegisterElement("line", {
+        slot = "footer",
+        style = {}
+    })
 
     playerListMenupage:RegisterElement("button", {
         label = _U("back"),
@@ -81,5 +110,9 @@ function GetPlayerListMenuPage(exclusionList, playerChosenCbFunct, backButtonCbF
         backButtonCbFunct()
     end)
 
+    playerListMenupage:RegisterElement("bottomline", {
+        slot = "footer",
+        style = {}
+    })
     return playerListMenupage
 end

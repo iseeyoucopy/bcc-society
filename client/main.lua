@@ -1,6 +1,11 @@
 -- Main page of client
 IsAdmin = false
 local blips = {}
+local OwnedSocieties = {} -- key = business_id, value = true
+
+function IsSocietyOwner(businessId)
+    return OwnedSocieties[businessId] == true
+end
 
 CreateThread(function() -- Devmode area
     if Config.devMode then
@@ -18,66 +23,51 @@ end)
 RegisterNetEvent("bcc-society:ReceiveSocietyData", function(result)
     if result then
         for _, v in ipairs(result.societiesOwned) do
+            OwnedSocieties[v.business_id] = true
+            devPrint("[ReceiveSocietyData] Registered owner of:" .. v.business_name .. " (ID: " .. v.business_id .. ")")
             TriggerEvent("bcc-society:SocietyStart", true, v)
         end
 
         for _, v in ipairs(result.societiesEmployed) do
+            devPrint("[ReceiveSocietyData] Registered employee at:" .. v.business_name .. " (ID: " .. v.business_id .. ")")
             TriggerEvent("bcc-society:SocietyStart", false, v)
         end
     end
 end)
 
 RegisterNetEvent("bcc-society:SocietyStart", function(isOwner, societyData)
-    BccUtils.RPC:Call("bcc-society:GetEmployeeData", { socId = societyData.business_id, recType = "rankData" }, function(billData)
-        if billData then
-            RegisterCommand(Config.billCommandName, function()
-                if (billData and billData.rank_can_bill_players == "true") or isOwner then
-                    local playerListPage = GetPlayerListMenuPage(false, function(data)
-                        -- Set up bill amount page
-                        local billAmountPage = BCCSocietyMenu:RegisterPage("bcc-society:billAmountPage")
-                        billAmountPage:RegisterElement("header", {
-                            value = _U("bill"),
-                            slot = "header",
-                            style = {}
-                        })
+    devPrint("[SocietyStart] Triggered for society:" .. societyData.business_name .. "| IsOwner:" .. tostring(isOwner))
+
+    local isOwner = IsSocietyOwner(societyData.business_id)
+    RegisterCommand(Config.billCommandName, function()
+        devPrint("[BillingCommand] Executed command:" .. Config.billCommandName)
     
-                        local billAmount = ""
-                        billAmountPage:RegisterElement("input", {
-                            label = _U("amount"),
-                            placeholder = _U("placeholder"),
-                            style = {}
-                        }, function(data)
-                            billAmount = data.value
-                        end)
+        if isOwner then
+            devPrint("[BillingCommand] Confirmed as owner for society:" .. societyData.business_name)
+            OpenBillingMenu(societyData)
+            return
+        end
     
-                        billAmountPage:RegisterElement("button", {
-                            label = _U("confirm"),
-                            style = {}
-                        }, function()
-                            if not string.find(billAmount, "-") and not string.find(billAmount, "'") and not string.find(billAmount, '"') then
-                                TriggerServerEvent("bcc-society:BillPlayer", data.source, billAmount)
-                                Core.NotifyRightTip(_U("billSuccess"), 4000)
-                                BCCSocietyMenu:Close()
-                            else
-                                Core.NotifyRightTip(_U("inputProtectionError"), 4000)
-                            end
-                        end)
-                        billAmountPage:RouteTo()
-                    end, function()
-                        BCCSocietyMenu:Close()
-                    end)
-    
-                    BCCSocietyMenu:Open({
-                        startupPage = playerListPage
-                    })
+        BccUtils.RPC:Call("bcc-society:GetEmployeeData", {
+            socId = societyData.business_id,
+            recType = "rankData"
+        }, function(billData)
+            if billData then
+                devPrint("[BillingCommand] Received employee billData:" .. json.encode(billData))
+                if billData.rank_can_bill_players == "true" then
+                    devPrint("[BillingCommand] Employee rank allows billing.")
+                    OpenBillingMenu(societyData)
                 else
+                    devPrint("[BillingCommand] Employee rank does NOT allow billing.")
                     Core.NotifyRightTip(_U("noBillPerms"), 4000)
                 end
-            end)
-        else
-            Core.NotifyRightTip("No rank data found", 4000)
-        end
+            else
+                devPrint("[BillingCommand] No employee rank data found.")
+                Core.NotifyRightTip("No rank data found or you're not onduty", 4000)
+            end
+        end)
     end)
+          
     
     -- Fired and payment handling
     local isFired = false

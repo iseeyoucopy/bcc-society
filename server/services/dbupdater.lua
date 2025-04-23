@@ -54,6 +54,18 @@ CreateThread(function()
             FOREIGN KEY (`business_id`) REFERENCES `bcc_society`(`business_id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]])
-
+    MySQL.query.await([[
+    CREATE TABLE IF NOT EXISTS bcc_society_bills (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        billed_identifier VARCHAR(255) NOT NULL,
+        biller_identifier VARCHAR(255) NOT NULL,
+        billed_name VARCHAR(150),
+        biller_name VARCHAR(150),
+        amount INT NOT NULL,
+        society_id VARCHAR(255),
+        description TEXT,
+        timestamp INT NOT NULL
+    );
+    ]])
     DBUpdated = true
 end)
