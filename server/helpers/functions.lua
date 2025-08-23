@@ -10,3 +10,11 @@ if Config.devMode then
 else
     function devPrint(message) end -- No-op if DevMode is disabled
 end
+
+function NotifyClient(src, message, type, duration)
+    BccUtils.RPC:Notify("bcc-society:NotifyClient", {
+        message = message,
+        type = type or "info",
+        duration = duration or 4000
+    }, src)
+end

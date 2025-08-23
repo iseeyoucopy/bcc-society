@@ -20,7 +20,7 @@ function CreateSocietyMenu()
         local playerListPage = GetPlayerListMenuPage(false, function(data)
             societyOwnerCharId = data.charId
             societyOwnerSource = data.source
-            Core.NotifyRightTip(_U("ownerSet"), 4000)
+            Notify(_U("ownerSet"), "success", 4000)
             createSocietyPage:RouteTo()
         end, function()
             createSocietyPage:RouteTo()
@@ -78,7 +78,7 @@ function CreateSocietyMenu()
                     style = {}
                 }, function()
                     societyBlipHash = v.blipHash
-                    Core.NotifyRightTip(_U("blipSet"), 4000)
+                    Notify(_U("blipSet"), "success", 4000)
                     createSocietyPage:RouteTo()
                 end)
             end
@@ -92,7 +92,7 @@ function CreateSocietyMenu()
 
             blipPage:RouteTo()
         else
-            Core.NotifyRightTip(_U("noBlipsInConfig"), 4000)
+            Notify(_U("noBlipsInConfig"), "error", 4000)
         end
     end)
 
@@ -150,13 +150,13 @@ function CreateSocietyMenu()
                 for k, v in pairs(stages) do
                     if tonumber(v.stage) == tonumber(stage) then
                         insert = false
-                        Core.NotifyRightTip(_U("inventoryStageExists"), 4000)
+                        Notify(_U("inventoryStageExists"), "error", 4000)
                         break
                     end
                 end
                 if insert then
                     stages[tonumber(stage)] = { stage = stage, cost = tonumber(stageCost), slotIncrease = tonumber(stageSlotIncrease) }
-                    Core.NotifyRightTip(_U("stageCreated"), 4000)
+                    Notify(_U("stageCreated"), "success", 4000)
                 end
             end
         end)
@@ -215,7 +215,7 @@ function CreateSocietyMenu()
             
             BCCSocietyMenu:Close()
         else
-            Core.NotifyRightTip(_U("fillAllFields"), 4000)
+            Notify(_U("fillAllFields"), "error", 4000)
         end
     end)
     

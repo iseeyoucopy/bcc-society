@@ -22,7 +22,7 @@ RegisterServerEvent("bcc-society:UpdateJob", function(jobName, societyId)
         if employeeRank then
             local jobGrade
             if employeeRank == 'none' then
-                Core.NotifyRightTip(_source, _U("noRankSetCanNotSwitchJob"), 4000)
+                NotifyClient(_source, _U("noRankSetCanNotSwitchJob"), "error", 4000)
             else
                 if employeeRank ~= "owner" then
                     jobGrade = society:GetRankInfo(employeeRank).society_job_rank
@@ -35,7 +35,7 @@ RegisterServerEvent("bcc-society:UpdateJob", function(jobName, societyId)
                 end
                 char.setJob(jobName)
                 char.setJobGrade(grade)
-                Core.NotifyRightTip(_source, _U("jobChanged"), 4000)
+                NotifyClient(_source, _U("jobChanged"), "success", 4000)
             end
         end
     end
@@ -55,13 +55,13 @@ RegisterServerEvent("bcc-society:ToggleOnDuty", function()
     local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?",
         { character.charIdentifier })
     if not employmentData or #employmentData == 0 then
-        Core.NotifyRightTip(_source, "You are not employed in a society and cannot toggle duty status.", 4000)
+        NotifyClient(_source, "You are not employed in a society and cannot toggle duty status.", "error", 4000)
         return
     end
 
     -- Check if player is actually off duty
     if string.sub(charJob, 1, 3) ~= "off" then
-        Core.NotifyRightTip(_source, "You are already on duty!", 4000)
+        NotifyClient(_source, "You are already on duty!", "error", 4000)
         return
     end
 
@@ -73,7 +73,7 @@ RegisterServerEvent("bcc-society:ToggleOnDuty", function()
         character.setJob(onDutyJob)     -- Method 2 with colon
     end
 
-    Core.NotifyRightTip(_source, _U("onDuty"), 4000)
+    NotifyClient(_source, _U("onDuty"), "success", 4000)
 
     -- Update employee rank in the database
     MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?",
@@ -94,13 +94,13 @@ RegisterServerEvent("bcc-society:ToggleOffDuty", function()
     local employmentData = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?",
         { character.charIdentifier })
     if not employmentData or #employmentData == 0 then
-        Core.NotifyRightTip(_source, "You are not employed in a society and cannot toggle duty status.", 4000)
+        NotifyClient(_source, "You are not employed in a society and cannot toggle duty status.", "error", 4000)
         return
     end
 
     -- Check if player is actually on duty
     if string.sub(charJob, 1, 3) == "off" then
-        Core.NotifyRightTip(_source, "You are already off duty!", 4000)
+        NotifyClient(_source, "You are already off duty!", "error", 4000)
         return
     end
 
@@ -109,8 +109,8 @@ RegisterServerEvent("bcc-society:ToggleOffDuty", function()
     
     -- Try to set the new job
     character.setJob(offDutyJob)
-    
-    Core.NotifyRightTip(_source, _U("offDuty"), 4000)
+
+    NotifyClient(_source, _U("offDuty"), "success", 4000)
 
     -- Update employee rank in the database
     MySQL.query.await("UPDATE bcc_society_employees SET employee_rank = ? WHERE employee_id = ?",

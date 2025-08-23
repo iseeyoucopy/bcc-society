@@ -7,11 +7,11 @@ RegisterServerEvent("bcc-society:InsertSocietyToDB", function(name, ownerCharId,
         for k, v in pairs(getAllSocieties) do
             if v.business_name == name then
                 exist = true
-                Core.NotifyRightTip(_source, _U("societyNameAlreadyExists"), 4000) break
+                NotifyClient(_source, _U("societyNameAlreadyExists"), "warning", 4000) break
             end
             if v.society_job == societyJob and v.society_job ~= 'none' then
                 exist = true
-                Core.NotifyRightTip(_source, _U("jobNameAlreadyExists"), 4000) break
+                NotifyClient(_source, _U("jobNameAlreadyExists"), "warning", 4000) break
             end
         end
     end
@@ -24,7 +24,7 @@ RegisterServerEvent("bcc-society:InsertSocietyToDB", function(name, ownerCharId,
 
         if Config.employeeWorksAtMultiple then
             MySQL.query.await("INSERT INTO bcc_society (business_name, owner_id, tax_amount, inv_limit, coords, blip_hash, inventory_upgrade_stages, society_job, max_job_grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", { name, ownerCharId, taxAmount, invLimit, json.encode(coords), blipHash, stages, societyJob, maxJobGrade })
-            Core.NotifyRightTip(_source, _U("societyCreated"), 4000)
+            NotifyClient(_source, _U("societyCreated"), "success", 4000)
             local retval = MySQL.query.await("SELECT * FROM bcc_society WHERE owner_id = ? AND business_name = ?", { ownerCharId, tostring(name) })
             if #retval > 0 then
                 BccUtils.Discord.sendMessage(Config.adminLogsWebhook, Config.WebhookTitle, Config.WebhookAvatar, _U("societyCreated"), _U("societyCreatedBy") .. creatorName .. _U("societyName") .. name .. _U("societyOwner") .. ownerName .. _U("societyId") .. retval[1].business_id)
@@ -33,14 +33,14 @@ RegisterServerEvent("bcc-society:InsertSocietyToDB", function(name, ownerCharId,
         else
             local ownedSocieties = MySQL.query.await("SELECT * FROM bcc_society WHERE owner_id = ?", { ownerCharId })
             if #ownedSocieties > 0 then
-                Core.NotifyRightTip(_source, _U("alreadyOwnSociety"), 4000)
+                NotifyClient(_source, _U("alreadyOwnSociety"), "error", 4000)
             else
                 local employedAtSocieties = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE employee_id = ?", { ownerCharId })
                 if #employedAtSocieties > 0 then
-                    Core.NotifyRightTip(_source, _U("alreadyEmployed"), 4000)
+                    NotifyClient(_source, _U("alreadyEmployed"), "error", 4000)
                 else
                     MySQL.query.await("INSERT INTO bcc_society (business_name, owner_id, tax_amount, inv_limit, coords, blip_hash, inventory_upgrade_stages, society_job, max_job_grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", { name, ownerCharId, taxAmount, invLimit, json.encode(coords), blipHash, stages, societyJob, maxJobGrade })
-                    Core.NotifyRightTip(_source, _U("societyCreated"), 4000)
+                    NotifyClient(_source, _U("societyCreated"), "success", 4000)
                     local retval = MySQL.query.await("SELECT * FROM bcc_society WHERE owner_id = ? AND business_name = ?", { ownerCharId, tostring(name) })
                     if #retval > 0 then
                         BccUtils.Discord.sendMessage(Config.adminLogsWebhook, Config.WebhookTitle, Config.WebhookAvatar, _U("societyCreated"), _U("societyCreatedBy") .. creatorName  .. _U("societyName") .. name .. _U("societyOwner") .. ownerName .. _U("societyId") .. retval[1].business_id)

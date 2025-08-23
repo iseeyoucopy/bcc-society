@@ -48,7 +48,7 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
         local owner = MySQL.query.await("SELECT * FROM bcc_society WHERE owner_id = ?", { playerCharId })
 
         if #employee > 0 or #owner > 0 then
-            Core.NotifyRightTip(_source, _U("playerCanNotBeHired"), 4000)
+            NotifyClient(_source, _U("playerCanNotBeHired"), "error", 4000)
         else
             -- Retrieve rank information from bcc_society_ranks table
             local rankInfo = MySQL.query.await(
@@ -64,7 +64,7 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
                 employeeChar.setJob(rankInfo[1].rank_name, true)             -- Set job to rank_name
                 employeeChar.setJobGrade(rankInfo[1].society_job_rank, true) -- Set job grade to society_job_rank
 
-                Core.NotifyRightTip(_source, _U("employeeHired"), 4000)
+                NotifyClient(_source, _U("employeeHired"), "success", 4000)
                 BccUtils.Discord.sendMessage(
                     societyData.webhook_link, Config.WebhookTitle, Config.WebhookAvatar,
                     _U("employeeHired"),
@@ -79,10 +79,10 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
                     "**Employee Name:** " .. employeeFullName .. "\n" ..
                     "**Business Name:** " .. societyData.business_name
                 )
-                Core.NotifyRightTip(playerSource, _U("youWereHired") .. societyData.business_name, 4000)
+                NotifyClient(playerSource, _U("youWereHired") .. societyData.business_name, "success", 4000)
                 TriggerClientEvent("bcc-society:SocietyStart", playerSource, false, societyData)
             else
-                Core.NotifyRightTip(_source, _U("rankNotFound"), 4000)
+                NotifyClient(_source, _U("rankNotFound"), "error", 4000)
             end
         end
     else
@@ -97,7 +97,7 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
             -- Set the job for the employee with the "off" prefixed rank name
             employeeChar.setJob(offRankName, true)
             employeeChar.setJobGrade(rankInfo[1].society_job_rank, true)
-            Core.NotifyRightTip(_source, _U("employeeHired"), 4000)
+            NotifyClient(_source, _U("employeeHired"), "success", 4000)
             BccUtils.Discord.sendMessage(
                 societyData.webhook_link, Config.WebhookTitle, Config.WebhookAvatar,
                 _U("employeeHired"),
@@ -112,10 +112,10 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
                 "**Employee Name:** " .. employeeFullName .. "\n" ..
                 "**Business Name:** " .. societyData.business_name
             )
-            Core.NotifyRightTip(playerSource, _U("youWereHired") .. societyData.business_name, 4000)
+            NotifyClient(playerSource, _U("youWereHired") .. societyData.business_name, "success", 4000)
             TriggerClientEvent("bcc-society:SocietyStart", playerSource, false, societyData)
         else
-            Core.NotifyRightTip(_source, _U("noRanks"), 4000)
+            NotifyClient(_source, _U("noRanks"), "error", 4000)
         end
     end
 end)
@@ -132,7 +132,7 @@ RegisterServerEvent('bcc-society:FireEmployee', function(businessId, playerCharI
             char.getUsedCharacter.setJob("unemployed", true)
             char.getUsedCharacter.setJobGrade(0, true)
 
-            Core.NotifyRightTip(playerId, _U("youWereFired") .. societyData.business_name, 4000)
+            NotifyClient(playerId, _U("youWereFired") .. societyData.business_name, "error", 4000)
             TriggerClientEvent('bcc-society:FiredFrom:' .. businessId, playerId)
             break
         end
@@ -149,7 +149,7 @@ RegisterServerEvent('bcc-society:FireEmployee', function(businessId, playerCharI
     )
     MySQL.query.await("DELETE FROM bcc_society_employees WHERE employee_id = ? AND business_id = ?",
         { playerCharId, businessId })
-    Core.NotifyRightTip(_source, _U("employeeFired"), 4000)
+    NotifyClient(_source, _U("employeeFired"), "success", 4000)
 end)
 
 RegisterServerEvent('bcc-society:ChangeEmployeeRank', function(businessId, rankName, employeeId, businessName)
@@ -180,15 +180,14 @@ RegisterServerEvent('bcc-society:ChangeEmployeeRank', function(businessId, rankN
                     char.getUsedCharacter.setJob(rankName, true)         -- Set job to new rank name
                     char.getUsedCharacter.setJobGrade(newJobGrade, true) -- Set job grade to new society_job_rank
 
-                    Core.NotifyRightTip(playerId,
-                        _U("yourRankWasChanged") .. rankName .. " " .. _U("yourRankWasChangedAt") .. businessName, 4000)
+                    NotifyClient(playerId, _U("yourRankWasChanged") .. rankName .. " " .. _U("yourRankWasChangedAt") .. businessName, "success", 4000)
                     TriggerClientEvent('bcc-society:UpdateEmployeeData:' .. businessId, playerId)
                     break
                 end
             end
 
 
-            Core.NotifyRightTip(_source, _U("employeeRankChanged"), 4000)
+            NotifyClient(_source, _U("employeeRankChanged"), "success", 4000)
 
             -- Send Discord message
             BccUtils.Discord.sendMessage(
@@ -200,7 +199,7 @@ RegisterServerEvent('bcc-society:ChangeEmployeeRank', function(businessId, rankN
                 "**Business Name:** " .. businessName
             )
         else
-            Core.NotifyRightTip(_source, _U("rankNotFound"), 4000)
+            NotifyClient(_source, _U("rankNotFound"), "error", 4000)
         end
     end
 end)
@@ -267,7 +266,7 @@ BccUtils.RPC:Register("bcc-society:GetPaymentAmount", function(params, cb, recSo
         end
     else
         cb(false) -- Return false if data is not found
-        Core.NotifyRightTip(recSource, _U('unableToRetrieve'), 4000)
+        NotifyClient(recSource, _U('unableToRetrieve'), "error", 4000)
     end
 end)
 
@@ -285,7 +284,7 @@ RegisterServerEvent("bcc-society:CollectPayment", function()
     local currentTime = os.time()
     local cooldownTime = 120 -- Cooldown time in seconds (e.g., 2 minutes)
     if playerPaymentCooldowns[_source] and currentTime - playerPaymentCooldowns[_source] < cooldownTime then
-        Core.NotifyRightTip(_source, _U('cooldownActive'), 4000)
+        NotifyClient(_source, _U('cooldownActive'), "error", 4000)
         return
     end
 
@@ -310,7 +309,7 @@ RegisterServerEvent("bcc-society:CollectPayment", function()
                 "UPDATE bcc_society_employees SET employee_payment = 0 WHERE employee_id = ? AND business_id = ?",
                     { char.charIdentifier, societyId })
 
-                Core.NotifyRightTip(_source, _U('youHaveCollected') .. tostring(payAmount), 4000)
+                NotifyClient(_source, _U('youHaveCollected') .. tostring(payAmount), "success", 4000)
 
                 -- Discord notification
                 local paymentMessage = "**Payment Collected**\n" ..
@@ -324,13 +323,13 @@ RegisterServerEvent("bcc-society:CollectPayment", function()
                 -- Set the last collection time for the player to the current time
                 playerPaymentCooldowns[_source] = currentTime
             else
-                Core.NotifyRightTip(_source, _U('insufficientFunds'), 4000)
+                NotifyClient(_source, _U('insufficientFunds'), "error", 4000)
             end
         else
-            Core.NotifyRightTip(_source, _U('youCannotCollect'), 4000)
+            NotifyClient(_source, _U('youCannotCollect'), "error", 4000)
         end
     else
-        Core.NotifyRightTip(_source, _U('youNeedToBeOnDuty'), 4000)
+        NotifyClient(_source, _U('youNeedToBeOnDuty'), "error", 4000)
     end
 end)
 
@@ -352,6 +351,6 @@ RegisterServerEvent("bcc-society:PayEmployee", function(payAmount, societyId)
         "UPDATE bcc_society_employees SET employee_payment = ? WHERE employee_id = ? AND business_id = ?",
             { newPayAmount, char.charIdentifier, societyId })
     else
-        Core.NotifyRightTip(_source, _U('youNeedToBeOnDuty'), 4000)
+        NotifyClient(_source, _U('youNeedToBeOnDuty'), "error", 4000)
     end
 end)
