@@ -59,11 +59,11 @@ RegisterNetEvent("bcc-society:SocietyStart", function(isOwner, societyData)
                     OpenBillingMenu(societyData)
                 else
                     devPrint("[BillingCommand] Employee rank does NOT allow billing.")
-                    Core.NotifyRightTip(_U("noBillPerms"), 4000)
+                    Notify(_U("noBillPerms"), "error", 4000)
                 end
             else
                 devPrint("[BillingCommand] No employee rank data found.")
-                Core.NotifyRightTip("No rank data found or you're not onduty", 4000)
+                Notify("No rank data found or you're not onduty", "error", 4000)
             end
         end)
     end)
@@ -76,7 +76,7 @@ RegisterNetEvent("bcc-society:SocietyStart", function(isOwner, societyData)
         TriggerEvent("bcc-society:FiredFrom" .. societyData.business_id .. "StopPay")
     end)
 
-    if not isOwner then
+    if isOwner or not isOwner then
         TriggerEvent("bcc-society:StartPayTimer", societyData.business_id)
     end
 

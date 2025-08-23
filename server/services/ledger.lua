@@ -23,7 +23,7 @@ RegisterServerEvent("bcc-society:LedgerManagement", function(businessId, amount,
             local amountToProcess = tonumber(amount)
 
             if not amountToProcess then
-                Core.NotifyRightTip(_source, _U("invalidAmount"), 4000)
+                NotifyClient(_source, _U("invalidAmount"), "error", 4000)
                 return
             end
 
@@ -31,20 +31,20 @@ RegisterServerEvent("bcc-society:LedgerManagement", function(businessId, amount,
                 if character.money and character.money >= amountToProcess then
                     society:AddMoneyToLedger(amountToProcess)
                     character.removeCurrency(0, amountToProcess)
-                    Core.NotifyRightTip(_source, _U("depositSuccess"), 4000)
+                    NotifyClient(_source, _U("depositSuccess"), "success", 4000)
                 else
-                    Core.NotifyRightTip(_source, _U("notEnoughCash"), 4000)
+                    NotifyClient(_source, _U("notEnoughCash"), "error", 4000)
                 end
             elseif type == "withdraw" then
                 if ledgerAmount >= amountToProcess then
                     society:RemoveMoneyFromLedger(amountToProcess)
                     character.addCurrency(0, amountToProcess)
-                    Core.NotifyRightTip(_source, _U("withdrawSuccess"), 4000)
+                    NotifyClient(_source, _U("withdrawSuccess"), "success", 4000)
                 else
-                    Core.NotifyRightTip(_source, _U("notEnoughFundsInLedger"), 4000)
+                    NotifyClient(_source, _U("notEnoughFundsInLedger"), "error", 4000)
                 end
             else
-                Core.NotifyRightTip(_source, _U("invalidTransactionType"), 4000)
+                NotifyClient(_source, _U("invalidTransactionType"), "error", 4000)
             end
         end
     end

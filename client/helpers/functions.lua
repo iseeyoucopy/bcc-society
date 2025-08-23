@@ -25,8 +25,8 @@ BCCSocietyMenu = FeatherMenu:RegisterMenu('BCC-Society:Menu', {
     },
     contentslot = {
         style = {
-            ['height'] = '350px',
-            ['min-height'] = '250px'
+            ['height'] = '450px',
+            ['min-height'] = '300px'
         }
     },
     draggable = true,
@@ -53,6 +53,47 @@ if Config.devMode then
 else
     function devPrint(...) end
 end
+function Notify(message, typeOrDuration, maybeDuration)
+    local opts = Config.NotifyOptions or {}
+    local notifyType = opts.type
+    local notifyDuration = opts.autoClose
+    local notifyTransition = opts.transition
+    local notifyPosition = opts.position
+    local hideProgress = opts.hideProgressBar
+
+    -- Detect which argument is which
+    if type(typeOrDuration) == "string" then
+        notifyType = typeOrDuration
+        notifyDuration = tonumber(maybeDuration) or notifyDuration
+    elseif type(typeOrDuration) == "number" then
+        notifyDuration = typeOrDuration
+    end
+
+    if Config.Notify == "feather-menu" then
+        FeatherMenu:Notify({
+            message = message,
+            type = notifyType,
+            autoClose = notifyDuration,
+            position = notifyPosition,
+            transition = notifyTransition,
+            icon = true,
+            hideProgressBar = hideProgress,
+            rtl = false,
+            style = opts.style or {},
+            toastStyle = opts.toastStyle or {},
+            progressStyle = opts.progressStyle or {}
+        })
+    elseif Config.Notify == "vorp-core" then
+        -- Only message and duration supported
+        Core.NotifyRightTip(message, notifyDuration)
+    else
+        print("^1[Notify] Invalid Config.Notify: " .. tostring(Config.Notify))
+    end
+end
+
+BccUtils.RPC:Register("bcc-society:NotifyClient", function(data)
+    Notify(data.message, data.type, data.duration)
+end)
 
 -- Function to create and display the player list menu
 function GetPlayerListMenuPage(exclusionList, playerChosenCbFunct, backButtonCbFunct)

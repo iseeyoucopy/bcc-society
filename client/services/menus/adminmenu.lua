@@ -37,7 +37,7 @@ RegisterCommand(Config.adminMenuCommandName, function()
                             style = {}
                         }, function()
                             TriggerServerEvent("bcc-society:AdminManageSociety", v.business_id, true)
-                            Core.NotifyRightTip(_U("deleted"), 4000)
+                            Notify(_U("deleted"), "success", 4000)
                             BCCSocietyMenu:Close()
                         end)
                         confirmationPage:RegisterElement("button", {
@@ -106,7 +106,7 @@ RegisterCommand(Config.adminMenuCommandName, function()
                                     style = {}
                                 }, function()
                                     blipHash = a.blipHash
-                                    Core.NotifyRightTip(_U("blipSet"), 4000)
+                                    Notify(_U("blipSet"), "success", 4000)
                                     indivudalSocietyPage:RouteTo()
                                 end)
                             end
@@ -120,7 +120,7 @@ RegisterCommand(Config.adminMenuCommandName, function()
 
                             blipPage:RouteTo()
                         else
-                            Core.NotifyRightTip(_U("noBlipsInConfig"), 4000)
+                            Notify(_U("noBlipsInConfig"), "error", 4000)
                         end
                     end)
 
@@ -129,7 +129,7 @@ RegisterCommand(Config.adminMenuCommandName, function()
                         style = {}
                     }, function()
                         TriggerServerEvent("bcc-society:AdminManageSociety", v.business_id, false, societyTaxAmount, name, invLimit, blipHash, job)
-                        Core.NotifyRightTip(_U("changed"), 4000)
+                        Notify(_U("changed"), "success", 4000)
                         BCCSocietyMenu:Close()
                     end)
 
@@ -148,7 +148,7 @@ RegisterCommand(Config.adminMenuCommandName, function()
                 startupPage = adminPage
             })
         else
-            Core.NotifyRightTip(_U("noSocieties"), 4000)
+            Notify(_U("noSocieties"), "error", 4000)
         end
     end
 end)

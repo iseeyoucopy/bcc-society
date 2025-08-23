@@ -14,6 +14,6 @@ RegisterServerEvent("bcc-society:ServerSyncBlips", function(blipName, blipHash, 
         if not delete then delete = "true" end
         MySQL.query.await("UPDATE bcc_society SET show_blip = ? WHERE business_id = ?", { delete, blipSocietyId })
     else
-        Core:NotifyRightTip(_source, _U("blipCooldown"), 4000)
+        NotifyClient(_source, _U("blipCooldown"), "error", 4000)
     end
 end)

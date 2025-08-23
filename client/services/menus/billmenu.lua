@@ -64,15 +64,15 @@ function OpenReceiptMenu(receipt)
                 receiptId = receipt.id
             }, function(success, msg)
                 if success then
-                    Core.NotifyRightTip(_U("receiptDeleted"), 4000)
+                    Notify(_U("receiptDeleted"), "success", 4000)
                     BCCSocietyMenu:Close()
                 else
-                    Core.NotifyRightTip(_U(msg) or _U("receiptDeleteFailed"), 4000)
+                    Notify(_U(msg) or _U("receiptDeleteFailed"), "error", 4000)
                 end
             end)
         else
             devPrint("[Client] Invalid receipt or missing ID for deletion.")
-            Core.NotifyRightTip(_U("invalidReceipt"), 4000)
+            Notify(_U("invalidReceipt"), "error", 4000)
         end
     end)
 
@@ -149,16 +149,16 @@ function OpenBillingMenu(societyData)
                 }, function(success, errorMsg)
                     if success then
                         devPrint("[BillingCommand] Billing successful.")
-                        Core.NotifyRightTip(_U("billSuccess"), 4000)
+                        Notify(_U("billSuccess"), "success", 4000)
                     else
                         devPrint("[BillingCommand] Billing failed:" .. errorMsg)
-                        Core.NotifyRightTip(errorMsg or _U("billingFailed"), 4000)
+                        Notify(errorMsg or _U("billingFailed"), "error", 4000)
                     end
                 end)
                 BCCSocietyMenu:Close()
             else
                 devPrint("[BillingCommand] Input validation failed.")
-                Core.NotifyRightTip(_U("inputProtectionError"), 4000)
+                Notify(_U("inputProtectionError"), "error", 4000)
             end
         end)
         billAmountPage:RegisterElement("bottomline", {

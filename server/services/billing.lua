@@ -33,13 +33,14 @@ BccUtils.RPC:Register("bcc-society:BillPlayer", function(params, cb, src)
     local cost = tonumber(amount)
     if not cost or cost <= 0 then
         devPrint("Invalid cost entered: " .. tostring(amount))
-        Core.NotifyRightTip(_source, _U("invalidAmount"), 4000)
+
+        NotifyClient(_source, _U("invalidAmount"), "error", 4000)
         return
     end
 
     if billed.money < cost then
         devPrint("Insufficient funds. Has: " .. billed.money .. ", needs: " .. cost)
-        Core.NotifyRightTip(_source, _U("targetNoMoney"), 4000)
+        NotifyClient(_source, _U("targetNoMoney"), "error", 4000)
         return
     end
 
@@ -86,8 +87,8 @@ BccUtils.RPC:Register("bcc-society:BillPlayer", function(params, cb, src)
 
     -- Notify
     devPrint("Sending UI notifications.")
-    Core.NotifyRightTip(playerServerId, _U("youHaveBeenBilled") .. cost .. _U("checkInvnt"), 5000)
-    Core.NotifyRightTip(_source, _U("billSuccess"), 4000)
+    NotifyClient(playerServerId, _U("youHaveBeenBilled") .. cost .. _U("checkInvnt"), 5000)
+    NotifyClient(_source, _U("billSuccess"), 4000)
 
     -- Discord log
     devPrint("Sending to Discord log.")
@@ -139,7 +140,7 @@ BccUtils.RPC:Register("bcc-society:OpenReceiptMenu", function(receiptId, src)
     if result and result[1] then
         OpenReceiptMenu(result[1])
     else
-        Core.NotifyRightTip(src, _U("receiptNotFound"), 4000)
+        NotifyClient(src, _U("receiptNotFound"), "error", 4000)
     end
 end)
 
@@ -194,7 +195,7 @@ local function HandleReceiptItemUse(data)
     exports.vorp_inventory:closeInventory(src)
 
     if not data.item or type(data.item.metadata) ~= "table" then
-        Core.NotifyRightTip(src, _U("invalidReceiptItem"), 4000)
+        NotifyClient(src, _U("invalidReceiptItem"), "error", 4000)
 
         -- Delete the item if metadata is missing or invalid
         if data.item and data.item.id then
@@ -208,7 +209,7 @@ local function HandleReceiptItemUse(data)
     local receiptId = metadata.receipt_id
 
     if not receiptId then
-        Core.NotifyRightTip(src, _U("receiptNotFoundAndDeleted"), 4000)
+        NotifyClient(src, _U("receiptNotFoundAndDeleted"), "error", 4000)
         Wait(2000)
         -- Delete the item if it doesn't contain a valid receipt_id
         if data.item and data.item.id then
@@ -223,7 +224,7 @@ local function HandleReceiptItemUse(data)
         receipt._target = src
         BccUtils.RPC:Notify("bcc-society:OpenReceiptMenu", receipt, src)
     else
-        Core.NotifyRightTip(src, _U("receiptNotFound"), 4000)
+        NotifyClient(src, _U("receiptNotFound"), "error", 4000)
     end
 end
 

@@ -45,9 +45,9 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
                 )
                 MySQL.query.await("INSERT INTO bcc_society_ranks (business_id, rank_name, rank_label, rank_pay, rank_pay_increment, rank_can_toggle_blip, rank_can_withdraw, rank_can_deposit, rank_can_edit_ranks, rank_can_manage_employees, rank_can_open_inventory, rank_can_edit_webhook_link, rank_can_manage_store, society_job_rank, rank_can_bill_players) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     { businessId, rankName, rankLabel, rankPay, payIncrement, toggleBlip, withdraw, deposit, editRanks, manageEmployees, openInventory, editWebhook, canManageStore, rankJobGrade, rankCanBillPlayers })
-                Core.NotifyRightTip(_source, _U("rankCreated"), 4000)
+                NotifyClient(_source, _U("rankCreated"), "success", 4000)
             else
-                Core.NotifyRightTip(_source, _U("rankExists"), 4000)
+                NotifyClient(_source, _U("rankExists"), "error", 4000)
             end
         else
             BccUtils.Discord.sendMessage(
@@ -59,7 +59,7 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
             )
             MySQL.query.await("INSERT INTO bcc_society_ranks (business_id, rank_name, rank_label, rank_pay, rank_pay_increment, rank_can_toggle_blip, rank_can_withdraw, rank_can_deposit, rank_can_edit_ranks, rank_can_manage_employees, rank_can_open_inventory, rank_can_edit_webhook_link, rank_can_manage_store, society_job_rank, rank_can_bill_players) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 { businessId, rankName, rankLabel, rankPay, payIncrement, toggleBlip, withdraw, deposit, editRanks, manageEmployees, openInventory, editWebhook, canManageStore, rankJobGrade, rankCanBillPlayers })
-            Core.NotifyRightTip(_source, _U("rankCreated"), 4000)
+            NotifyClient(_source, _U("rankCreated"), "success", 4000)
         end
     elseif type == "update" then
         local retval = MySQL.query.await("SELECT * FROM bcc_society_ranks WHERE business_id = ? AND rank_name = ?", { businessId, rankName })
@@ -73,13 +73,13 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
             )
             MySQL.query.await("UPDATE bcc_society_ranks SET rank_label = ?, rank_pay = ?, rank_pay_increment = ?, rank_can_toggle_blip = ?, rank_can_withdraw = ?, rank_can_deposit = ?, rank_can_edit_ranks = ?, rank_can_manage_employees = ?, rank_can_open_inventory = ?, rank_can_edit_webhook_link = ?, rank_can_manage_store = ?, society_job_rank = ?, rank_can_bill_players = ? WHERE business_id = ? AND rank_name = ?",
                 { rankLabel, rankPay, payIncrement, toggleBlip, withdraw, deposit, editRanks, manageEmployees, openInventory, editWebhook, canManageStore, rankJobGrade, rankCanBillPlayers, businessId, rankName })
-            Core.NotifyRightTip(_source, _U("rankUpdated"), 4000)
+            NotifyClient(_source, _U("rankUpdated"), "success", 4000)
         end
         
     elseif type == "delete" then
         -- Validate `businessId` and `rankName`
         if not businessId or not rankName then
-            Core.NotifyRightTip(_source, _U("invalidDeleteParams"), 4000)
+            NotifyClient(_source, _U("invalidDeleteParams"), "error", 4000)
             return
         end
     
@@ -88,8 +88,8 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
         if #retval > 0 then
             -- Delete the rank
             MySQL.query.await("DELETE FROM bcc_society_ranks WHERE business_id = ? AND rank_name = ?", { businessId, rankName })
-            Core.NotifyRightTip(_source, _U("rankDeleted"), 4000)
-    
+            NotifyClient(_source, _U("rankDeleted"), "success", 4000)
+
             -- Check if webhook link exists
             if webhookLink and webhookLink[1] and webhookLink[1].webhook_link then
                 -- Send a Discord notification
@@ -106,7 +106,7 @@ RegisterServerEvent("bcc-society:RankManagement", function(type, businessId, ran
                 print("Warning: No webhook link available for business ID " .. businessId)
             end
         else
-            Core.NotifyRightTip(_source, _U("rankNotFound"), 4000)
+            NotifyClient(_source, _U("rankNotFound"), "error", 4000)
         end
     end
     

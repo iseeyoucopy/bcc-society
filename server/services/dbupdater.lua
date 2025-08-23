@@ -1,4 +1,3 @@
-
 CreateThread(function()
     MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `bcc_society` (
@@ -21,7 +20,7 @@ CreateThread(function()
             FOREIGN KEY (`owner_id`) REFERENCES `characters`(`charidentifier`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]])
-    
+
     MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `bcc_society_employees` (
             `business_id` int NOT NULL,
@@ -67,5 +66,25 @@ CreateThread(function()
         timestamp INT NOT NULL
     );
     ]])
+    -- Check if column already exists
+    local result = MySQL.query.await([[
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'bcc_society_bills' 
+        AND COLUMN_NAME = 'status'
+    ]])
+
+    if not result or #result == 0 then
+        -- Add the column if it does not exist
+        MySQL.query.await([[
+            ALTER TABLE `bcc_society_bills` 
+            ADD COLUMN `status` VARCHAR(10) DEFAULT 'PENDING';
+        ]])
+        print("[MySQL] Column 'status' added to bcc_society_bills ✅")
+    else
+        print("[MySQL] Column 'status' already exists in bcc_society_bills ⏩")
+    end
     DBUpdated = true
+        -- Debug message for successful table creation or update
+    print("Database table \x1b[35m\x1b[1m*bcc_society*\x1b[0m created or updated \x1b[32msuccessfully\x1b[0m.")
 end)

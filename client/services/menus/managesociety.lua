@@ -22,7 +22,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
             -- Request the payment amount using a callback
             BccUtils.RPC:Call("bcc-society:GetPaymentAmount", {}, function(paymentAmount)
                 if not paymentAmount then
-                    Core.NotifyRightTip(_U('nothingToCollect'), 4000)
+                    Notify(_U('nothingToCollect'), "error", 4000)
                     return
                 end
 
@@ -211,7 +211,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                         TriggerServerEvent("bcc-society:RankManagement", "add", societyData.business_id, rankName, rankLabel, rankPay, payIncrement, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers)
                         ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     else
-                        Core.NotifyRightTip(_U("fillAllFields"), 4000)
+                        Notify(_U("fillAllFields"), "error", 4000)
                     end
                 end)
             
@@ -401,7 +401,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                                     TriggerServerEvent('bcc-society:RankManagement', "update", societyData.business_id, v.rank_name, rankLabel, rankPayNumber, payIncrementNumber, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers)
                                     ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                                 else
-                                    Core.NotifyRightTip(_U("fillAllFields"), 4000)
+                                    Notify(_U("fillAllFields"), "error", 4000)
                                 end
 
                             end)
@@ -452,7 +452,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
 
                     viewRanksPage:RouteTo()
                 else
-                    Core.NotifyRightTip(_U("noRanks"), 4000)
+                    Notify(_U("noRanks"), "error", 4000)
                 end
             end)
 
@@ -556,7 +556,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     style = {}
                 }, function(data)
                     if string.find(data.value, "-") or string.find(data.value, "'") or string.find(data.value, '"') then -- checking for ' or " to prevent sql injection and - to prevent negative numbers
-                        Core.NotifyRightTip(_U("inputProtectionError"), 4000)
+                        Notify(_U("inputProtectionError"), "error", 4000)
                         depositAmount = ''
                     else
                         depositAmount = data.value
@@ -570,7 +570,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     style = {}
                 }, function(data)
                     if string.find(data.value, "-") or string.find(data.value, "'") or string.find(data.value, '"') then -- checking for ' or " to prevent sql injection and - to prevent negative numbers
-                        Core.NotifyRightTip(_U("inputProtectionError"), 4000)
+                        Notify(_U("inputProtectionError"), "error", 4000)
                         withdrawAmount = ''
                     else
                         withdrawAmount = data.value
@@ -598,7 +598,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                         ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     end
                     if depositAmount == '' and withdrawAmount == '' then
-                        Core.NotifyRightTip(_U("fillAllFields"), 4000)
+                        Notify(_U("fillAllFields"), "error", 4000)
                     end
                 end)
             end
@@ -652,10 +652,10 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     style = {}
                 }, function()
                     if BccUtils.RPC:CallAsync("bcc-society:UpgradeInventory", {socId = societyData.business_id, cost = stageData.nextStage.cost, nextStage = stageData.nextStage.stage}) then
-                        Core.NotifyRightTip(_U("inventoryUpgraded"), 4000)
+                        Notify(_U("inventoryUpgraded"), "success", 4000)
                         ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     else
-                        Core.NotifyRightTip(_U("notEnoughCash"), 4000)
+                        Notify(_U("notEnoughCash"), "error", 4000)
                     end
                 end)
             end
@@ -812,10 +812,10 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
 
                                             changeRankPage:RouteTo()
                                         else
-                                            Core.NotifyRightTip(_U("noRanks"), 4000)
+                                            Notify(_U("noRanks"), "error", 4000)
                                         end
                                     else
-                                        Core.NotifyRightTip(_U("noRanks"), 4000)
+                                        Notify(_U("noRanks"), "error", 4000)
                                     end
                                 end)
 
@@ -841,10 +841,10 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
 
                         viewEmployeesPage:RouteTo()
                     else
-                        Core.NotifyRightTip(_U("noEmployees"), 4000)
+                        Notify(_U("noEmployees"), "error", 4000)
                     end
                 else
-                    Core.NotifyRightTip(_U("noEmployees"), 4000)
+                    Notify(_U("noEmployees"), "error", 4000)
                 end
             end)
 
@@ -900,10 +900,10 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                 if webhookLink ~= "" then
                     TriggerServerEvent("bcc-society:EditWebhookLink", societyData.business_id, webhookLink)
                     societyData.webhook_link = webhookLink
-                    Core.NotifyRightTip(_U("changed"), 4000)
+                    Notify(_U("changed"), "success", 4000)
                     ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                 else
-                    Core.NotifyRightTip(_U("fillAllFields"), 4000)
+                    Notify(_U("fillAllFields"), "error", 4000)
                 end
             end)
 
