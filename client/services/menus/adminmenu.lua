@@ -1,5 +1,5 @@
 RegisterCommand(Config.adminMenuCommandName, function()
-    if IsAdmin then
+    if IsPlayerAdmin() then
         local societies = BccUtils.RPC:CallAsync("bcc-society:GetAllSocieties")
         if #societies > 0 then
             local adminPage = BCCSocietyMenu:RegisterPage("bcc-society:adminPage")

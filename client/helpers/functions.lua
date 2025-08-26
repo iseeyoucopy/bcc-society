@@ -53,6 +53,7 @@ if Config.devMode then
 else
     function devPrint(...) end
 end
+
 function Notify(message, typeOrDuration, maybeDuration)
     local opts = Config.NotifyOptions or {}
     local notifyType = opts.type
@@ -156,4 +157,8 @@ function GetPlayerListMenuPage(exclusionList, playerChosenCbFunct, backButtonCbF
         style = {}
     })
     return playerListMenupage
+end
+
+function IsPlayerAdmin()
+    return AdminAllowed
 end

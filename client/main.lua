@@ -1,5 +1,5 @@
 -- Main page of client
-IsAdmin = false
+AdminAllowed = nil
 local blips = {}
 local OwnedSocieties = {} -- key = business_id, value = true
 
@@ -9,14 +9,16 @@ end
 
 CreateThread(function() -- Devmode area
     if Config.devMode then
-        IsAdmin = BccUtils.RPC:CallAsync("BCC-Society:AdminCheck")
+        AdminAllowed = BccUtils.RPC:CallAsync("BCC-Society:AdminCheck")
+        devPrint("[RPC] Admin check result: " .. tostring(AdminAllowed))
         TriggerServerEvent("bcc-society:CheckIfInSociety")
     end
 end)
 
 RegisterNetEvent('vorp:SelectedCharacter')
 AddEventHandler('vorp:SelectedCharacter', function()
-    IsAdmin = BccUtils.RPC:CallAsync("BCC-Society:AdminCheck")
+    AdminAllowed = BccUtils.RPC:CallAsync("BCC-Society:AdminCheck")
+    devPrint("[RPC] Admin check result: " .. tostring(AdminAllowed))
     TriggerServerEvent("bcc-society:CheckIfInSociety")
 end)
 
@@ -84,8 +86,7 @@ RegisterNetEvent("bcc-society:SocietyStart", function(isOwner, societyData)
     local societyCoords = json.decode(societyData.coords)
     local societyCoordsVector3 = vector3(societyCoords.x, societyCoords.y, societyCoords.z)
     if societyData.show_blip == "true" and Config.allowBlips and societyData.blip_hash ~= "none" then
-        TriggerServerEvent("bcc-society:ServerSyncBlips", societyData.business_name, societyData.blip_hash,
-            societyCoordsVector3, societyData.business_id, false)
+        TriggerServerEvent("bcc-society:ServerSyncBlips", societyData.business_name, societyData.blip_hash, societyCoordsVector3, societyData.business_id, false)
     end
 
     -- Prompt setup

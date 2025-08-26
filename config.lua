@@ -1,5 +1,5 @@
 Config = {
-    devMode = false,                             -- Enable/Disable Dev Mode (False on live)
+    devMode = true,                             -- Enable/Disable Dev Mode (False on live)
     defaultlang = "en_lang",                    -- Choose the language file to use
     Notify = "feather-menu",                    ----or use vorp-core
     NotifyOptions = {
@@ -18,8 +18,9 @@ Config = {
 
     employeeWorksAtMultiple = true,                     -- Allow employees to work at multiple societies (Can only own one regardless of this setting)
     openJobManagementMenuCommandName = "jobManagement", -- Command to open the job management menu (This is how you switch between jobs (NOTE this only applies if you enable employeeWorksAtMultiple))
-    -- Set your admin group here
-    adminGroup = 'admin',
+
+    adminGroups = { "admin", "superadmin" },  -- groups allowed
+    AllowedJobs = { 'writer', 'societymanager' },
     toggleOnDutyCommandName = "onDuty",       -- Command to toggle duty
     toggleOffDutyCommandName = "offDuty",     -- Command to toggle duty
     allowBlips = true,                        -- Allow blips to be shown for societies

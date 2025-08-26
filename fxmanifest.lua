@@ -21,7 +21,7 @@ client_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/helpers/functions.lua',
-    'server/services/API.lua', --Ensure first so we can use the api in this society script
+    'server/services/API.lua',
     'server/services/dbupdater.lua',
     'server/helpers/*.lua',
     'server/services/*.lua',
@@ -37,4 +37,4 @@ dependencies {
     'vorp_inventory',
 }
 
-version '1.3.0'
+version '1.3.1'
