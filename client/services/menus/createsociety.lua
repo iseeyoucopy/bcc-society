@@ -230,7 +230,7 @@ function CreateSocietyMenu()
 end
 
 RegisterCommand(Config.createSocietyCommandName, function()
-    if IsAdmin then
+    if IsPlayerAdmin() then
         CreateSocietyMenu()
     end
 end)
