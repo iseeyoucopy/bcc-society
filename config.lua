@@ -10,7 +10,7 @@ Config = {
         hideProgressBar = false,                -- show progress bar
     },
     createSocietyCommandName = "createSociety", -- Command to create a society
-    useWebhooks = false,
+    useWebhooks = true,
     WebhookTitle = 'BCC-Society',
     WebhookAvatar = '',
     adminLogsWebhook = "", -- Webhook for admin logs
@@ -18,6 +18,8 @@ Config = {
 
     employeeWorksAtMultiple = true,                     -- Allow employees to work at multiple societies (Can only own one regardless of this setting)
     openJobManagementMenuCommandName = "jobManagement", -- Command to open the job management menu (This is how you switch between jobs (NOTE this only applies if you enable employeeWorksAtMultiple))
+    switchJobCommandName = "switchjob",                 -- Command to switch directly to a specific job
+    switchJobCooldownSeconds = 30,                       -- Cooldown for the switch job command in seconds (set to 0 to disable)
 
     adminGroups = { "admin", "superadmin" },  -- groups allowed
     AllowedJobs = { 'writer', 'societymanager' },

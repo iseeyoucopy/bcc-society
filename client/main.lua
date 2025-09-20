@@ -166,7 +166,3 @@ AddEventHandler('onResourceStop', function(resourceName)
         TriggerServerEvent('bcc-society:ToggleOffDuty')
     end
 end)
-
-AddEventHandler('playerDropped', function()
-    TriggerServerEvent('bcc-society:ToggleOffDuty')
-end)
