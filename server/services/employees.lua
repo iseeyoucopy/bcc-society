@@ -91,12 +91,23 @@ RegisterServerEvent('bcc-society:PlayerHired', function(businessId, playerCharId
             { businessId })
 
         if rankInfo and #rankInfo > 0 then
-            -- Insert employee record with "off" prefixed rank name in the database
+            -- Insert employee record with "off" prefixed rank name in the database to mark them off-duty by default
             local offRankName = "off" .. rankInfo[1].rank_name
-            MySQL.query.await("INSERT INTO bcc_society_employees (employee_id, business_id, employee_name, employee_rank) VALUES (?, ?, ?, ?)", { playerCharId, businessId, employeeFullName, offRankName })
-            -- Set the job for the employee with the "off" prefixed rank name
-            employeeChar.setJob(offRankName, true)
-            employeeChar.setJobGrade(rankInfo[1].society_job_rank, true)
+            MySQL.query.await(
+                "INSERT INTO bcc_society_employees (employee_id, business_id, employee_name, employee_rank) VALUES (?, ?, ?, ?)",
+                { playerCharId, businessId, employeeFullName, offRankName }
+            )
+
+            local societyJobName = societyData and societyData.society_job or nil
+            if societyJobName and societyJobName ~= "" and societyJobName ~= "none" then
+                local offDutyJob = "off" .. societyJobName
+                local currentJob = employeeChar.job
+
+                if not currentJob or currentJob == "" or currentJob == "unemployed" or currentJob == "none" then
+                    employeeChar.setJob(offDutyJob, true)
+                    employeeChar.setJobGrade(rankInfo[1].society_job_rank, true)
+                end
+            end
             NotifyClient(_source, _U("employeeHired"), "success", 4000)
             BccUtils.Discord.sendMessage(
                 societyData.webhook_link, Config.WebhookTitle, Config.WebhookAvatar,

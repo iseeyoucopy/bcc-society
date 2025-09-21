@@ -57,17 +57,27 @@ function SocietyAPI:GetSociety(societyId)
             end
         end
         function society:GetEmployeeRank(charId)
-            local retval = MySQL.query.await("SELECT * FROM bcc_society_employees WHERE business_id = ? AND employee_id = ?", { self.id, charId })
+            local retval = MySQL.query.await(
+                "SELECT * FROM bcc_society_employees WHERE business_id = ? AND employee_id = ?",
+                { self.id, charId }
+            )
+
             if #retval > 0 then
-                return retval[1].employee_rank
-            else
-                local socInfo = self.GetSocietyInfo(self)
-                if socInfo and socInfo.owner_id == charId then
-                    return "owner"
-                else
-                    return false
+                local storedRank = retval[1].employee_rank
+
+                if storedRank and type(storedRank) == "string" and storedRank:sub(1, 3) == "off" then
+                    return storedRank:sub(4), storedRank
                 end
+
+                return storedRank, storedRank
             end
+
+            local socInfo = self.GetSocietyInfo(self)
+            if socInfo and socInfo.owner_id == charId then
+                return "owner", "owner"
+            end
+
+            return false
         end
         function society:GetRankInfo(rankName)
             local retval = MySQL.query.await("SELECT * FROM bcc_society_ranks WHERE business_id = ? AND rank_name = ?", { self.id, rankName })
@@ -151,47 +161,106 @@ function SocietyAPI.MiscAPI:GetAllSocieties()
 end
 
 function SocietyAPI.MiscAPI:GetAllSocietyJobsFromSocietiesPlayerEmployedAtOrOwns(charIdentifier)
-    local allEmployedSocs = self.GetAllSocietiesCharIsEmployedAt(self, charIdentifier)
-    local ownedSocs = self.GetAllSocietiesCharOwns(self, charIdentifier)
-    if allEmployedSocs or ownedSocs then
-        local jobs = {}
-        if allEmployedSocs then
-            for k, v in pairs(allEmployedSocs) do
-                local socInfo = SocietyAPI:GetSociety(v.business_id):GetSocietyInfo()
-                if socInfo and socInfo.society_job ~= "none" then
-                    table.insert(jobs, {jobName = socInfo.society_job, societyId = v.business_id})
-                else
-                    table.remove(allEmployedSocs, k)
-                end
-            end
-        end
-        if ownedSocs then
-            for k, v in pairs(ownedSocs) do
-                if #jobs > 0 then
-                    for e, a in pairs(jobs) do
-                        if a ~= v.society_job and v.society_job ~= "none" then
-                            table.insert(jobs, {jobName = v.society_job, societyId = v.business_id}) break
-                        else
-                            table.remove(ownedSocs, k)
-                        end
-                    end
-                else
-                    if v.society_job ~= 'none' then
-                        table.insert(jobs, {jobName = v.society_job, societyId = v.business_id})
-                    else
-                        table.remove(ownedSocs, k)
-                    end
-                end
-            end
-        end
-        if #jobs > 0 then
-            return jobs
-        else
-            return false
-        end
-    else
+    local employedSocs = self.GetAllSocietiesCharIsEmployedAt(self, charIdentifier) or {}
+    local ownedSocs = self.GetAllSocietiesCharOwns(self, charIdentifier) or {}
+
+    if (#employedSocs == 0 and #ownedSocs == 0) then
         return false
     end
+
+    local jobs, seen = {}, {}
+
+    local function sanitizeRank(rank)
+        if type(rank) ~= 'string' then return nil end
+        if rank:sub(1, 3) == 'off' then
+            rank = rank:sub(4)
+        end
+        if rank == '' or rank == 'none' then
+            return nil
+        end
+        return rank
+    end
+
+    local function addEntry(businessId, rankSuggestion)
+        if not businessId or seen[businessId] then return end
+
+        local society = SocietyAPI:GetSociety(businessId)
+        if not society then return end
+
+        local info = society:GetSocietyInfo()
+        if not info then return end
+
+        seen[businessId] = true
+
+        local rankName = sanitizeRank(rankSuggestion)
+        local societyJob = info.society_job
+        if type(societyJob) ~= 'string' or societyJob == '' or societyJob == 'none' then
+            societyJob = nil
+        end
+
+        local jobName = rankName or societyJob or info.business_name
+        local labelSuffix = rankName or societyJob
+
+        local displayName = info.business_name
+        if labelSuffix and labelSuffix ~= '' then
+            displayName = string.format('%s (%s)', info.business_name, labelSuffix)
+        end
+
+        local rankEntries = {}
+        local societyRanks = society:GetAllRanks()
+        if societyRanks then
+            for _, rankData in ipairs(societyRanks) do
+                local canSwitch = tostring(rankData.rank_can_switch_job or "false"):lower() == "true"
+                if canSwitch then
+                    local rankLabel = rankData.rank_label
+                    if not rankLabel or rankLabel == '' or rankLabel == 'none' then
+                        rankLabel = rankData.rank_name
+                    end
+
+                    table.insert(rankEntries, {
+                        rankName = rankData.rank_name,
+                        rankLabel = rankLabel,
+                        displayName = string.format('%s (%s)', info.business_name, rankLabel),
+                        jobName = rankData.rank_name,
+                        jobGrade = tonumber(rankData.society_job_rank) or 0,
+                        canSwitch = true
+                    })
+                end
+            end
+
+            table.sort(rankEntries, function(a, b)
+                return a.jobGrade < b.jobGrade
+            end)
+        end
+
+        table.insert(jobs, {
+            societyId = info.business_id,
+            jobName = jobName,
+            displayName = displayName,
+            businessName = info.business_name,
+            societyJob = societyJob,
+            rankName = rankName,
+            ranks = rankEntries
+        })
+    end
+
+    for _, employment in ipairs(employedSocs) do
+        addEntry(employment.business_id, employment.employee_rank)
+    end
+
+    for _, owned in ipairs(ownedSocs) do
+        addEntry(owned.business_id, nil)
+    end
+
+    if #jobs == 0 then
+        return false
+    end
+
+    table.sort(jobs, function(a, b)
+        return a.displayName < b.displayName
+    end)
+
+    return jobs
 end
 
 function SocietyAPI.MiscAPI:CheckIfPlayerHasJobAndIsOnDuty(jobName, playerSource)
@@ -204,23 +273,18 @@ function SocietyAPI.MiscAPI:CheckIfPlayerHasJobAndIsOnDuty(jobName, playerSource
         return false
     end
 
-    -- Get the player's current job and job grade
     local playerJob = Character.job
     local jobGrade = Character.jobGrade
 
-    -- Check if the player is employed in the society
     local employmentData = MySQL.query.await("SELECT employee_rank FROM bcc_society_employees WHERE employee_id = ?", { Character.charIdentifier })
     
     if not employmentData or #employmentData == 0 then
         return false
     end
 
-    -- Check if the current job matches the requested job and is not off duty
     if playerJob == jobName then
-        -- They are on duty with the correct job
         return true
     elseif playerJob == ("off" .. jobName) then
-        -- They have the correct job but are off duty
         return false
     end
 

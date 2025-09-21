@@ -48,6 +48,7 @@ CreateThread(function()
             `rank_can_manage_store` char(6) NOT NULL DEFAULT "false",
             `society_job_rank` int NOT NULL DEFAULT 0,
             `rank_can_bill_players` char(6) NOT NULL DEFAULT "false",
+            `rank_can_switch_job` char(6) NOT NULL DEFAULT "true",
             `rank_label` varchar(255) NOT NULL DEFAULT 'none',
             `employee_payment` int(11) NOT NULL DEFAULT 0,
             FOREIGN KEY (`business_id`) REFERENCES `bcc_society`(`business_id`) ON DELETE CASCADE
@@ -76,13 +77,30 @@ CreateThread(function()
 
     if not result or #result == 0 then
         -- Add the column if it does not exist
-        MySQL.query.await([[
+        MySQL.query.await([[ 
             ALTER TABLE `bcc_society_bills` 
             ADD COLUMN `status` VARCHAR(10) DEFAULT 'PENDING';
         ]])
         print("[MySQL] Column 'status' added to bcc_society_bills ✅")
     else
         print("[MySQL] Column 'status' already exists in bcc_society_bills ⏩")
+    end
+
+    local switchColumn = MySQL.query.await([[
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = 'bcc_society_ranks'
+        AND COLUMN_NAME = 'rank_can_switch_job'
+    ]])
+
+    if not switchColumn or #switchColumn == 0 then
+        MySQL.query.await([[ 
+            ALTER TABLE `bcc_society_ranks`
+            ADD COLUMN `rank_can_switch_job` CHAR(6) NOT NULL DEFAULT 'true';
+        ]])
+        print("[MySQL] Column 'rank_can_switch_job' added to bcc_society_ranks ✅")
+    else
+        print("[MySQL] Column 'rank_can_switch_job' already exists in bcc_society_ranks ⏩")
     end
     DBUpdated = true
         -- Debug message for successful table creation or update

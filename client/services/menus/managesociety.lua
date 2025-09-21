@@ -88,7 +88,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                 style = {}
             }, function()
                 local addRankPage = BCCSocietyMenu:RegisterPage("bcc-society:addRankPage")
-                local toggleBlip, withrdraw, deposit, editWebhook, editRanks, manageEmployees, openInv, canManageStore, rankJobGrade, canBillPlayers = "false", 'false', 'false', 'false', 'false', 'false', 'false', 'false', 0, 'false'
+                local toggleBlip, withrdraw, deposit, editWebhook, editRanks, manageEmployees, openInv, canManageStore, rankJobGrade, canBillPlayers, canSwitchJob = "false", 'false', 'false', 'false', 'false', 'false', 'false', 'false', 0, 'false', 'false'
                 local rankLabel -- New variable for rank_label
             
                 addRankPage:RegisterElement("header", {
@@ -186,7 +186,21 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                 }, function(data)
                     manageEmployees = data.value and "true" or "false"
                 end)
-            
+
+                addRankPage:RegisterElement('toggle', {
+                    label = _U("canManageStore"),
+                    start = false
+                }, function(data)
+                    canManageStore = data.value and "true" or "false"
+                end)
+
+                addRankPage:RegisterElement('toggle', {
+                    label = _U("canSwitchJob"),
+                    start = false
+                }, function(data)
+                    canSwitchJob = data.value and "true" or "false"
+                end)
+
                 addRankPage:RegisterElement('toggle', {
                     label = _U("canOpenInventory"),
                     start = false
@@ -208,7 +222,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                         if tonumber(societyData.max_job_grade) <= tonumber(rankJobGrade) then
                             rankJobGrade = tonumber(societyData.max_job_grade) - 1 -- Preventing the rank from being the same as the owner
                         end
-                        TriggerServerEvent("bcc-society:RankManagement", "add", societyData.business_id, rankName, rankLabel, rankPay, payIncrement, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers)
+                        TriggerServerEvent("bcc-society:RankManagement", "add", societyData.business_id, rankName, rankLabel, rankPay, payIncrement, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers, canSwitchJob)
                         ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                     else
                         Notify(_U("fillAllFields"), "error", 4000)
@@ -248,7 +262,13 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                             style = {}
                         }, function()
                             local individualRankPage = BCCSocietyMenu:RegisterPage("bcc-society:individualRankPage")
-                            local toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers = v.rank_can_toggle_blip, v.rank_can_withdraw, v.rank_can_deposit, v.rank_can_edit_ranks, v.rank_can_manage_employees, v.rank_can_open_inventory, v.rank_can_edit_webhook_link, v.rank_can_manage_store, v.society_job_rank, v.rank_can_bill_players
+                            local toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers, canSwitchJob = v.rank_can_toggle_blip, v.rank_can_withdraw, v.rank_can_deposit, v.rank_can_edit_ranks, v.rank_can_manage_employees, v.rank_can_open_inventory, v.rank_can_edit_webhook_link, v.rank_can_manage_store, v.society_job_rank, v.rank_can_bill_players, v.rank_can_switch_job
+                            if canManageStore ~= "true" and canManageStore ~= "false" then
+                                canManageStore = "false"
+                            end
+                            if canSwitchJob ~= "true" then
+                                canSwitchJob = "false"
+                            end
                             individualRankPage:RegisterElement("header", {
                                 value = v.rank_name,
                                 slot = "header",
@@ -294,7 +314,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                             }, function(data)
                                 rankJobGrade = data.value
                             end)
-                            local stringToBoolean = { ["true"] = true, ["false"] = false }
+                            local stringToBoolean = { ["true"] = true, ["false"] = false, ["1"] = true, ["0"] = false }
                             individualRankPage:RegisterElement('toggle', {
                                 label = _U("canToggleBlip"),
                                 start = stringToBoolean[toggleBlip]
@@ -307,7 +327,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                             end)
                             individualRankPage:RegisterElement('toggle', {
                                 label = _U("canBillPlayers"),
-                                start = false
+                                start = stringToBoolean[canBillPlayers]
                             }, function(data)
                                 if data.value then
                                     canBillPlayers = "true"
@@ -367,6 +387,26 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                                 end
                             end)
                             individualRankPage:RegisterElement('toggle', {
+                                label = _U("canManageStore"),
+                                start = stringToBoolean[canManageStore]
+                            }, function(data)
+                                if data.value then
+                                    canManageStore = "true"
+                                else
+                                    canManageStore = "false"
+                                end
+                            end)
+                            individualRankPage:RegisterElement('toggle', {
+                                label = _U("canSwitchJob"),
+                                start = stringToBoolean[canSwitchJob]
+                            }, function(data)
+                                if data.value then
+                                    canSwitchJob = "true"
+                                else
+                                    canSwitchJob = "false"
+                                end
+                            end)
+                            individualRankPage:RegisterElement('toggle', {
                                 label = _U("canOpenInventory"),
                                 start = stringToBoolean[openInv]
                             }, function(data)
@@ -398,7 +438,7 @@ function ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                                     -- Use the existing `v.rank_label` for `rankLabel` if it wasn’t modified
                                     local rankLabel = v.rank_label -- Replace "Default Label" if a different default is preferred
 
-                                    TriggerServerEvent('bcc-society:RankManagement', "update", societyData.business_id, v.rank_name, rankLabel, rankPayNumber, payIncrementNumber, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers)
+                                    TriggerServerEvent('bcc-society:RankManagement', "update", societyData.business_id, v.rank_name, rankLabel, rankPayNumber, payIncrementNumber, toggleBlip, withrdraw, deposit, editRanks, manageEmployees, openInv, editWebhook, canManageStore, rankJobGrade, canBillPlayers, canSwitchJob)
                                     ManageSocietyMenu(societyData, societyCoordsVector3, isOwner)
                                 else
                                     Notify(_U("fillAllFields"), "error", 4000)
